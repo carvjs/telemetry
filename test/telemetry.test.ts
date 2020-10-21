@@ -1,35 +1,19 @@
 /**
  * @jest-environment node
  */
-import { promisify, format } from 'util'
+import { promisify } from 'util'
 
-import { ConsoleLogger, LogLevel } from '@opentelemetry/core'
-
-import { Telemetry } from '../src'
+import { Telemetry, TestLogger } from '../src'
 
 const nextTick = promisify(setImmediate)
 
 jest.useFakeTimers()
 
-class Logger extends ConsoleLogger {
-  constructor() {
-    super(LogLevel.WARN)
-  }
-
-  error(message: string, ...args: unknown[]): void {
-    throw new Error(format(message, ...args))
-  }
-
-  warn(message: string, ...args: unknown[]): void {
-    throw new Error(format(message, ...args))
-  }
-}
-
 let telemetry: Telemetry
 
 beforeEach(() => {
   telemetry = new Telemetry({
-    logger: new Logger(),
+    logger: new TestLogger(),
   })
 })
 
