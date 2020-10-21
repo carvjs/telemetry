@@ -41,8 +41,6 @@ test('no metrics', async () => {
   const metrics = await telemetry.collect()
 
   expect(metrics).toBe('# no registered metrics')
-
-  await telemetry.shutdown()
 })
 
 test('createCounter', async () => {
