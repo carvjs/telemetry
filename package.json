@@ -14,7 +14,7 @@
     "build": "tsdx build --target node",
     "test": "tsdx test",
     "lint": "tsdx lint",
-    "prepare": "tsdx build",
+    "prepare": "tsdx build--target node",
     "release": "np"
   },
   "husky": {
