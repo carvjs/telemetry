@@ -5,7 +5,7 @@ import { promisify, format } from 'util'
 
 import { ConsoleLogger, LogLevel } from '@opentelemetry/core'
 
-import { Telemetry, Plugin } from '../src'
+import { Telemetry } from '../src'
 
 const nextTick = promisify(setImmediate)
 
@@ -450,7 +450,23 @@ test('use plugin with ready', async () => {
   })
 
   const options = {}
-  telemetry.use((plugin as unknown) as Plugin<unknown, Telemetry>, options)
+  telemetry.use(plugin, options)
+
+  expect(plugin).not.toHaveBeenCalled()
+
+  await telemetry.ready()
+
+  expect(plugin).toHaveBeenCalledTimes(1)
+  expect(plugin).toHaveBeenCalledWith(telemetry, options, expect.any(Function))
+})
+
+test('use async plugin', async () => {
+  const plugin = jest.fn((_instance, _options) => {
+    return Promise.resolve()
+  })
+
+  const options = {}
+  telemetry.use(plugin, options)
 
   expect(plugin).not.toHaveBeenCalled()
 
@@ -466,10 +482,7 @@ test('use plugin with ready (Promise<{ default: plugin }>)', async () => {
   })
 
   const options = {}
-  telemetry.use(
-    Promise.resolve({ default: (plugin as unknown) as Plugin<unknown, Telemetry> }),
-    options,
-  )
+  telemetry.use(Promise.resolve({ default: plugin }), options)
 
   expect(plugin).not.toHaveBeenCalled()
 
@@ -485,7 +498,7 @@ test('use plugin with ready (Promise<plugin>)', async () => {
   })
 
   const options = {}
-  telemetry.use(Promise.resolve((plugin as unknown) as Plugin<unknown, Telemetry>), options)
+  telemetry.use(Promise.resolve(plugin), options)
 
   expect(plugin).not.toHaveBeenCalled()
 
@@ -501,7 +514,7 @@ test('use plugin with ready ({ default: plugin })', async () => {
   })
 
   const options = {}
-  telemetry.use({ default: (plugin as unknown) as Plugin<unknown, Telemetry> }, options)
+  telemetry.use({ default: plugin }, options)
 
   expect(plugin).not.toHaveBeenCalled()
 
@@ -517,7 +530,7 @@ test('use plugin with start', async () => {
   })
 
   const options = {}
-  telemetry.use((plugin as unknown) as Plugin<unknown, Telemetry>, options)
+  telemetry.use(plugin, options)
 
   expect(plugin).not.toHaveBeenCalled()
 

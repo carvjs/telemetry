@@ -1,15 +1,20 @@
 import avvio from 'avvio'
 
-export interface Plugin<O, I> extends avvio.Plugin<O, I> {
+export interface Plugin<O, I> {
+  (context: avvio.context<I>, options: O, done: (err?: Error) => void): void
+}
+
+export interface AsyncPlugin<O, I> {
   (context: avvio.context<I>, options: O): Promise<void>
 }
 
+type MaybePromiseLike<T> = T | PromiseLike<T>
+type MaybeDefault<T> = T | { default: T }
+type AnyPlugin<O, I> = Plugin<I, O> | AsyncPlugin<I, O>
+
 export interface Use<I, C = avvio.context<I>> extends avvio.Use<I, C> {
   <O>(
-    plugin:
-      | Plugin<O, I>
-      | { default: Plugin<O, I> }
-      | PromiseLike<Plugin<O, I> | { default: Plugin<O, I> }>,
+    plugin: MaybePromiseLike<MaybeDefault<AnyPlugin<I, O>>>,
     options?: O | ((context: avvio.context<I>) => O),
   ): C
 }
