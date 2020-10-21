@@ -65,6 +65,8 @@ export class Telemetry extends Avvio {
   private readonly [kMeter]: Meter
   private readonly [kLabels]: api.Labels | undefined
   private readonly [kMetrics]: Map<string, facades.Metric>
+
+  log: api.Logger
   exportMetrics: () => string
 
   constructor({
@@ -91,6 +93,8 @@ export class Telemetry extends Avvio {
       logger,
       logLevel: 3, // Debug; get all logs and let the logger decide which to discard
     })
+
+    this.log = meterProvider.logger
 
     this[kMeter] = meterProvider.getMeter(name)
     this[kLabels] = labels
