@@ -5,7 +5,13 @@ export interface Plugin<O, I> extends avvio.Plugin<O, I> {
 }
 
 export interface Use<I, C = avvio.context<I>> extends avvio.Use<I, C> {
-  <O>(fn: avvio.Plugin<O, I>, options?: (context: avvio.context<I>) => O): C
+  <O>(
+    plugin:
+      | Plugin<O, I>
+      | { default: Plugin<O, I> }
+      | PromiseLike<Plugin<O, I> | { default: Plugin<O, I> }>,
+    options?: O | ((context: avvio.context<I>) => O),
+  ): C
 }
 
 export interface After<I, C = avvio.context<I>> extends avvio.After<I, C> {

@@ -5,7 +5,7 @@ import { promisify, format } from 'util'
 
 import { ConsoleLogger, LogLevel } from '@opentelemetry/core'
 
-import { Telemetry } from '../src'
+import { Telemetry, Plugin } from '../src'
 
 const nextTick = promisify(setImmediate)
 
@@ -450,7 +450,58 @@ test('use plugin with ready', async () => {
   })
 
   const options = {}
-  telemetry.use(plugin, options)
+  telemetry.use((plugin as unknown) as Plugin<unknown, Telemetry>, options)
+
+  expect(plugin).not.toHaveBeenCalled()
+
+  await telemetry.ready()
+
+  expect(plugin).toHaveBeenCalledTimes(1)
+  expect(plugin).toHaveBeenCalledWith(telemetry, options, expect.any(Function))
+})
+
+test('use plugin with ready (Promise<{ default: plugin }>)', async () => {
+  const plugin = jest.fn((_instance, _options, done) => {
+    done()
+  })
+
+  const options = {}
+  telemetry.use(
+    Promise.resolve({ default: (plugin as unknown) as Plugin<unknown, Telemetry> }),
+    options,
+  )
+
+  expect(plugin).not.toHaveBeenCalled()
+
+  await telemetry.ready()
+
+  expect(plugin).toHaveBeenCalledTimes(1)
+  expect(plugin).toHaveBeenCalledWith(telemetry, options, expect.any(Function))
+})
+
+test('use plugin with ready (Promise<plugin>)', async () => {
+  const plugin = jest.fn((_instance, _options, done) => {
+    done()
+  })
+
+  const options = {}
+  telemetry.use(Promise.resolve((plugin as unknown) as Plugin<unknown, Telemetry>), options)
+
+  expect(plugin).not.toHaveBeenCalled()
+
+  await telemetry.ready()
+
+  expect(plugin).toHaveBeenCalledTimes(1)
+  expect(plugin).toHaveBeenCalledWith(telemetry, options, expect.any(Function))
+})
+
+test('use plugin with ready ({ default: plugin })', async () => {
+  const plugin = jest.fn((_instance, _options, done) => {
+    done()
+  })
+
+  const options = {}
+  telemetry.use({ default: (plugin as unknown) as Plugin<unknown, Telemetry> }, options)
 
   expect(plugin).not.toHaveBeenCalled()
 
@@ -466,7 +517,7 @@ test('use plugin with start', async () => {
   })
 
   const options = {}
-  telemetry.use(plugin, options)
+  telemetry.use((plugin as unknown) as Plugin<unknown, Telemetry>, options)
 
   expect(plugin).not.toHaveBeenCalled()
 
