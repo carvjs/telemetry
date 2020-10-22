@@ -13,8 +13,11 @@ export interface Updatable {
   update(value: number, labels?: api.Labels | undefined): number
 }
 
-export interface ObservableInstrument extends Instrument, Updatable {
+export interface Observable {
   observe(value: number, labels?: api.Labels | undefined): number
+}
+
+export interface ObservableInstrument extends Instrument, Updatable, Observable {
   observation(value: number): api.Observation
 }
 
@@ -153,7 +156,7 @@ export class CounterMetric extends SumMixin(BaseCounterMetric) {}
 export class UpDownCounterMetric extends UpDownSumMixin(BaseCounterMetric) {}
 export class ValueRecorderMetric extends ValueMixin(BaseValueMetric) {}
 
-export class BaseValueObserver {
+export class BaseValueObserver implements Updatable, Observable {
   private readonly [kDelegatee]: api.ObserverResult
   private readonly [kLabels]: api.Labels | undefined
 
@@ -163,12 +166,12 @@ export class BaseValueObserver {
   }
 
   update(value: number, labels?: api.Labels | undefined): number {
-    this[kDelegatee].observe(value, { ...this[kLabels], ...labels })
-    return value
+    return this.observe(value, labels)
   }
 
   observe(value: number, labels?: api.Labels | undefined): number {
-    return this.update(value, labels)
+    this[kDelegatee].observe(value, { ...this[kLabels], ...labels })
+    return value
   }
 }
 

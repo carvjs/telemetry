@@ -4,8 +4,8 @@ export { Labels } from '@opentelemetry/api'
 
 export * from './avvio'
 
+export * from './telemetry'
 export * from './boundaries'
 export * from './facades'
-export * from './telemetry'
-
+export * from './names'
 export * from './logger'

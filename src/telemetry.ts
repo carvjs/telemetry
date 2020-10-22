@@ -13,6 +13,7 @@ import { Avvio } from './avvio'
 import Batcher from './batcher'
 import * as boundaries from './boundaries'
 import * as facades from './facades'
+import { makeName, validateName } from './names'
 
 export interface TelemetryOptions {
   name?: string
@@ -30,6 +31,7 @@ export interface TelemetryOptions {
 }
 
 export interface MetricOptions {
+  prefix?: string
   name: string
   description?: string
   unit?: string
@@ -126,6 +128,21 @@ export class Telemetry extends Avvio {
 
   getLabels(labels?: api.Labels | undefined): api.Labels {
     return { ...this[kLabels], ...labels }
+  }
+
+  validateName(name: string): string {
+    validateName(name)
+
+    assert(
+      !this.has(name),
+      `A metric with the name ${JSON.stringify(name)} has already been registered.`,
+    )
+
+    return name
+  }
+
+  makeName(...parts: (string | undefined | null | false)[]): string {
+    return makeName(...parts)
   }
 
   has(name: string): boolean {
@@ -322,10 +339,10 @@ function setMetric<T extends facades.Metric>(metrics: Map<string, facades.Metric
 
 function getOptions<T extends MetricOptions>(
   telemetry: Telemetry,
-  { name, labels, unit, description = unit && `in ${unit}`, ...metricOptions }: T,
+  { prefix, name, labels, unit, description = unit && `in ${unit}`, ...metricOptions }: T,
 ) {
   return {
-    name: validateName(telemetry, name),
+    name: telemetry.validateName(telemetry.makeName(prefix, name)),
     labels: telemetry.getLabels(labels),
     metricOptions: { ...metricOptions, unit, description },
   }
@@ -356,18 +373,6 @@ function getBatchOptions<T extends BatchMetricOptions>(
     ...parsedOptions,
     metricOptions: { maxTimeoutUpdateMS, ...parsedOptions.metricOptions },
   }
-}
-
-function validateName(telemetry: Telemetry, name: string): string {
-  assert(name, 'Missing mandatory name parameter')
-  // Support
-  // - prometheus:    [a-zA-Z_:][a-zA-Z0-9_:]*
-  // - opentelemetry: [a-zA-Z][a-zA-Z0-9_.-]*
-  // => [a-zA-Z][a-z0-9_]*
-  assert(/^[a-z][\w_]*$/i.test(name), `Invalid metric name ${name}`)
-  assert(!telemetry.has(name), `A metric with the name ${name} has already been registered.`)
-
-  return name
 }
 
 function invoke<O, R>(

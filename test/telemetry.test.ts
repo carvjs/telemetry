@@ -27,6 +27,26 @@ test('no metrics', async () => {
   expect(metrics).toBe('# no registered metrics')
 })
 
+test('with prefix', async () => {
+  telemetry = new Telemetry({
+    prefix: 'app',
+    logger: new TestLogger(),
+  })
+
+  const counter = telemetry.createCounter({ prefix: 'instance', name: 'a_counter' })
+
+  expect(telemetry.has('a_counter')).toBe(false)
+  expect(telemetry.has('instance_a_counter')).toBe(true)
+  expect(telemetry.has('app_instance_a_counter')).toBe(false)
+  expect(telemetry.get('instance_a_counter')).toBe(counter)
+
+  expect(counter.add()).toBe(1)
+
+  const metrics = await telemetry.collect()
+
+  expect(metrics).toMatch(/^# TYPE app_instance_a_counter counter$/m)
+})
+
 test('createCounter', async () => {
   const counter = telemetry.createCounter({ name: 'a_counter' })
   expect(counter.add()).toBe(1)
